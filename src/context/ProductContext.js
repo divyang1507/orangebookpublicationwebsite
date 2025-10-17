@@ -2,11 +2,14 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { supabase } from "@/utils/supabase/client";// centralized client
+import { createClient } from "@/utils/supabase/client";
+
+
+
 
 const ProductContext = createContext();
-
 const ProductProvider = ({ children }) => {
+  const supabase = createClient();
   const [books, setBooks] = useState([]);
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(false);
