@@ -1,5 +1,5 @@
 'use client'
-import BookSection from '@/components/BookSection'
+import BookSection from '@/components/Section/BookSection/BookSection'
 import React from 'react'
 
 const page = () => {
