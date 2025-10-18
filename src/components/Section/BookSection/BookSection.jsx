@@ -1,6 +1,7 @@
 "use client"
-import { useProduct } from '@/context/ProductContext'
 import React from 'react'
+import ProductCard from './ProductCard'
+import { useProduct } from '@/context/ProductContext'
 
 const BookSection = () => {
     const {books} = useProduct()

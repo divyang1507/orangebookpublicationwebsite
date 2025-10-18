@@ -7,11 +7,12 @@ import React, { useState } from "react";
 import UserButton from "./UserButton";
 import Image from "next/image";
 import { Menu, X } from "lucide-react"; // Optional: use icon library
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-
+  const { user, profile, loading, isAdmin } = useAuth();
   const navLinks = [
     { name: "Home", link: "/" },
     { name: "Products", link: "/products" },
@@ -42,8 +43,18 @@ const Navbar = () => {
 
         {/* Auth Buttons */}
         <div className="hidden lg:flex gap-4">
-          {"" ? (
-            <UserButton name={"div"} />
+          {user ? (
+            <div className="flex gap-2">
+              <UserButton name={profile?.name} />
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  onClick={() => router.push("/admin")}
+                  className="border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white">
+                  Admin Panel
+                </Button>
+              )}
+            </div>
           ) : (
             <>
               <Button
@@ -85,8 +96,8 @@ const Navbar = () => {
             ))}
           </ul>
           <div className="flex flex-col gap-3 mt-4">
-            {session ? (
-              <UserButton name={"div"} />
+            {user ? (
+              <UserButton name={profile.name} />
             ) : (
               <>
                 <Button

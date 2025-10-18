@@ -10,6 +10,7 @@ import {
 } from "./ui/dropdown-menu";
 import { FiUser } from "react-icons/fi";
 import { useRouter } from "next/navigation";
+import { signOut } from "@/app/(auth)/actions";
 
 const UserButton = ({name}) => {
   const router = useRouter()
@@ -23,9 +24,9 @@ const UserButton = ({name}) => {
         <DropdownMenuContent className="">
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={()=>router.push('/user')}>{`profile : div`}</DropdownMenuItem>
+          <DropdownMenuItem onClick={()=>router.push('/user')}>{`profile : ${name}`}</DropdownMenuItem>
           <DropdownMenuItem
-          onClick={() => console.log("div")}
+          onClick={() => signOut().then(() => router.push('/'))}
             className="focus:bg-red-300 hover:bg-red-700 transition-colors">
             logout
           </DropdownMenuItem>

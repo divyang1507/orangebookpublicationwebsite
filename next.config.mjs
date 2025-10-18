@@ -11,6 +11,13 @@
       domains: [
         'img.freepik.com',
       ],
+        remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'horizon-tailwind-react-git-tailwind-components-horizon-ui.vercel.app',
+        pathname: '/**',
+      },
+    ],
     },
   };
   
