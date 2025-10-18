@@ -45,7 +45,7 @@ export default function ContactSection() {
               <FaMapMarkerAlt className="text-orange-500 text-xl mt-1" />
               <div>
                 <h4 className="font-semibold text-gray-700">Address</h4>
-                <p className="text-gray-600">123 Orange Street, Delhi, India</p>
+                <p className="text-gray-600">Shop No. 19/1, Aroma City Center, 2nd Floor, Deesa, Gujarat, India</p>
               </div>
             </div>
           </div>

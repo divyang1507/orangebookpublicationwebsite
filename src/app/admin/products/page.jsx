@@ -19,7 +19,7 @@ const Page = () => {
 
   return (
     <div className='p-12'>
-      <Button onClick={() => router.push("/admin/addbook")} className="px-4 py-2 bg-orange-200 hover:outline-2 outline-orange-600 hover:bg-orange-400 rounded-lg">Add New Book ?</Button>
+   
       <AdminProducts />
     </div>
   );

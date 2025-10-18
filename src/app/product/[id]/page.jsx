@@ -8,13 +8,13 @@ import { useProduct } from "@/context/ProductContext";
 import { HashLoader } from "react-spinners";
 
 const Page = () => {
-  const { fetchbook, book, loading } = useProduct();
+  const { fetchBook, book, loading } = useProduct();
   const { id } = useParams();
   const [activeImage, setActiveImage] = useState();
 
   useEffect(() => {
     if (id && typeof id === "string") {
-      fetchbook(id);
+      fetchBook(id);
     }
   }, [id]);
 
