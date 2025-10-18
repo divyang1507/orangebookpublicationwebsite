@@ -1,17 +1,20 @@
 "use client";
-import { FaFacebook, FaRegStar, FaTwitter, FaYoutube } from "react-icons/fa";
+import { FaFacebook, FaMinus, FaPlus, FaRegStar, FaTwitter, FaYoutube } from "react-icons/fa";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useProduct } from "@/context/ProductContext";
 import { HashLoader } from "react-spinners";
+import { useCart } from "@/context/CartContext";
+import { Button } from "@/components/ui/button";
 
 const Page = () => {
   const { fetchBook, book, loading } = useProduct();
+  const { addToCart, loading: cartLoading } = useCart();
   const { id } = useParams();
   const [activeImage, setActiveImage] = useState();
-
+const [quantity, setQuantity] = useState(1); // State for quantity
   useEffect(() => {
     if (id && typeof id === "string") {
       fetchBook(id);
@@ -23,6 +26,17 @@ const Page = () => {
       setActiveImage(book.images[0].url);
     }
   }, [book]);
+
+  const handleQuantityChange = (amount) => {
+    setQuantity(prev => Math.max(1, prev + amount)); // Ensure quantity doesn't go below 1
+  };
+
+  const handleAddToCart = () => {
+    if (book) {
+      addToCart(book.id, quantity);
+    }
+  };
+
 
   return (
     <section className="w-[90%] max-w-7xl mx-auto py-12">
@@ -98,11 +112,45 @@ const Page = () => {
               <span className="text-2xl font-semibold text-orange-600">
                 ₹ {book?.price}
               </span>
-              <Link href="/cart">
+              {/* <Link href="/cart">
                 <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300">
                   Add to Cart
                 </button>
-              </Link>
+              </Link> */}
+              <div className="flex flex-col items-center gap-4">
+                 {/* Quantity Adjuster */}
+                 <div className="flex items-center border rounded">
+                    <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => handleQuantityChange(-1)}
+                        className="rounded-r-none"
+                        aria-label="Decrease quantity"
+                        disabled={quantity <= 1} // Disable minus if quantity is 1
+                    >
+                        <FaMinus/>
+                    </Button>
+                    <span className="px-4 text-center w-16">{quantity}</span>
+                     <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => handleQuantityChange(1)}
+                        className="rounded-l-none"
+                        aria-label="Increase quantity"
+                    >
+                       <FaPlus/>
+                     </Button>
+                 </div>
+
+                 {/* Add to Cart Button */}
+                 <Button
+                    onClick={handleAddToCart}
+                    disabled={cartLoading} // Disable button while cart operation is in progress
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300 disabled:opacity-50"
+                 >
+                    {cartLoading ? 'Adding...' : 'Add to Cart'}
+                 </Button>
+              </div>
             </div>
           </div>
         </div>
