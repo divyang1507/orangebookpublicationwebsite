@@ -66,13 +66,75 @@ export const CartProvider = ({ children }) => {
   }, [fetchCartItems]); // fetchCartItems depends on 'user'
 
   // Add Item to Cart (Handles Insert and Update)
-  const addToCart = async (bookId, quantity = 1) => {
+//   const addToCart = async (bookId, quantity = 1) => {
+//     if (!user) {
+//       toast.error("Please log in to add items to your cart.");
+//       // Optionally redirect to login page: router.push('/login');
+//       return;
+//     }
+//     if (quantity <= 0) {
+//         toast.error("Quantity must be positive.");
+//         return;
+//     }
+
+//     setLoading(true);
+//     setError(null);
+//     try {
+//         // Use upsert to either insert a new row or update the quantity if the item already exists
+//         // Supabase ON CONFLICT requires specifying the constraint name for UNIQUE constraints
+//         // Find the constraint name in Supabase UI: Database -> Tables -> cart_items -> Constraints
+//         // Or assume the default name convention: tablename_col1_col2_key
+//         const { error } = await supabase
+//         .from('cart_items')
+//         .upsert(
+//             { user_id: user.id, book_id: bookId, quantity: quantity },
+//             { onConflict: 'user_id, book_id' } // Use the columns defined in UNIQUE constraint
+//         );
+
+//         if (error) {
+//             // Check if it's a quantity update conflict (handled by upsert logic above if setup correctly)
+//             // If the error is different, throw it.
+//             // A more robust way might be needed if upsert doesn't automatically increment.
+//             // Alternative: Fetch first, then decide Insert or Update.
+
+//              // Simple Refetch approach after upsert attempt:
+//              if (error.code === '23505') { // Unique violation potentially handled by upsert logic if it was meant to update
+//                 // Attempt to update quantity explicitly if upsert logic needs help (less ideal)
+//                 const existingItem = cartItems.find(item => item.id === bookId);
+//                 if (existingItem) {
+//                     const newQuantity = existingItem.quantity + quantity;
+//                     const { error: updateError } = await supabase
+//                         .from('cart_items')
+//                         .update({ quantity: newQuantity })
+//                         .match({ user_id: user.id, book_id: bookId });
+//                     if (updateError) throw updateError;
+//                 } else {
+//                      throw error; // If not found, the original error was valid
+//                 }
+//              } else {
+//                 throw error; // Throw other errors
+//              }
+//         }
+
+//       toast.success("Item added to cart!");
+//       await fetchCartItems(); // Refresh cart state
+
+//     } catch (err) {
+//       console.error("Error adding to cart:", err);
+//       setError(err.message);
+//       toast.error("Failed to add item to cart.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+
+const addToCart = async (bookId, quantityToAdd = 1) => {
     if (!user) {
       toast.error("Please log in to add items to your cart.");
-      // Optionally redirect to login page: router.push('/login');
       return;
     }
-    if (quantity <= 0) {
+    if (quantityToAdd <= 0) {
         toast.error("Quantity must be positive.");
         return;
     }
@@ -80,54 +142,51 @@ export const CartProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-        // Use upsert to either insert a new row or update the quantity if the item already exists
-        // Supabase ON CONFLICT requires specifying the constraint name for UNIQUE constraints
-        // Find the constraint name in Supabase UI: Database -> Tables -> cart_items -> Constraints
-        // Or assume the default name convention: tablename_col1_col2_key
-        const { error } = await supabase
-        .from('cart_items')
-        .upsert(
-            { user_id: user.id, book_id: bookId, quantity: quantity },
-            { onConflict: 'user_id, book_id' } // Use the columns defined in UNIQUE constraint
-        );
+        // 1. Check if the item already exists in the cart for this user
+        const { data: existingItems, error: fetchError } = await supabase
+            .from('cart_items')
+            .select('id, quantity')
+            .eq('user_id', user.id)
+            .eq('book_id', bookId)
+            .maybeSingle(); // Use maybeSingle to get one item or null
 
-        if (error) {
-            // Check if it's a quantity update conflict (handled by upsert logic above if setup correctly)
-            // If the error is different, throw it.
-            // A more robust way might be needed if upsert doesn't automatically increment.
-            // Alternative: Fetch first, then decide Insert or Update.
+        if (fetchError) throw fetchError;
 
-             // Simple Refetch approach after upsert attempt:
-             if (error.code === '23505') { // Unique violation potentially handled by upsert logic if it was meant to update
-                // Attempt to update quantity explicitly if upsert logic needs help (less ideal)
-                const existingItem = cartItems.find(item => item.id === bookId);
-                if (existingItem) {
-                    const newQuantity = existingItem.quantity + quantity;
-                    const { error: updateError } = await supabase
-                        .from('cart_items')
-                        .update({ quantity: newQuantity })
-                        .match({ user_id: user.id, book_id: bookId });
-                    if (updateError) throw updateError;
-                } else {
-                     throw error; // If not found, the original error was valid
-                }
-             } else {
-                throw error; // Throw other errors
-             }
+        if (existingItems) {
+            // 2. If item exists, update its quantity
+            const newQuantity = existingItems.quantity + quantityToAdd;
+            const { error: updateError } = await supabase
+                .from('cart_items')
+                .update({ quantity: newQuantity })
+                .eq('id', existingItems.id); // Update using the specific cart item ID
+
+            if (updateError) throw updateError;
+            toast.success("Cart updated!");
+
+        } else {
+            // 3. If item doesn't exist, insert it
+            const { error: insertError } = await supabase
+                .from('cart_items')
+                .insert({
+                    user_id: user.id,
+                    book_id: bookId,
+                    quantity: quantityToAdd
+                });
+
+            if (insertError) throw insertError;
+            toast.success("Item added to cart!");
         }
 
-      toast.success("Item added to cart!");
-      await fetchCartItems(); // Refresh cart state
+      await fetchCartItems(); // Refresh cart state after insert or update
 
     } catch (err) {
-      console.error("Error adding to cart:", err);
+      console.error("Error adding/updating cart:", err);
       setError(err.message);
-      toast.error("Failed to add item to cart.");
+      toast.error("Failed to modify cart.");
     } finally {
       setLoading(false);
     }
   };
-
 
   // Remove Item from Cart
   const removeFromCart = async (cartItemId) => {
