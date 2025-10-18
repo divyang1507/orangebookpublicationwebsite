@@ -3,12 +3,12 @@ import React from 'react'
 
 const SideNav = () => {
 const data = [
-  { name: "Dashboard", link: "/admin/dashboard" },
+  { name: "Dashboard", link: "/admin" },
     { name: "Products", link: "/admin/products" },
-    { name: "Orders", link: "/admin/orders" },
     { name: "Users", link: "/admin/users" },
+    { name: "Orders", link: "/admin/orders" },
     { name: "Settings", link: "/admin/settings" },
-    { name: "Logout", link: "/admin/logout" },
+    // { name: "Logout", link: "/admin/logout" },
 ]
 
     return (

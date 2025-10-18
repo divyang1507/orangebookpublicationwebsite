@@ -11,9 +11,26 @@ import {
 import { FiUser } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { signOut } from "@/app/(auth)/actions";
+import { createClient } from "@/utils/supabase/client";
+import { toast } from "react-toastify";
 
-const UserButton = ({name}) => {
-  const router = useRouter()
+const UserButton = ({ name }) => {
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      toast.success("Signed out successfully");
+      router.refresh(); // refresh session state
+      router.push("/"); // redirect to homepage
+    } catch (err) {
+      console.error(err);
+      toast.error("Error signing out");
+    }
+  };
 
   return (
     <div>
@@ -24,9 +41,12 @@ const UserButton = ({name}) => {
         <DropdownMenuContent className="">
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={()=>router.push('/user')}>{`profile : ${name}`}</DropdownMenuItem>
           <DropdownMenuItem
-          onClick={() => signOut().then(() => router.push('/'))}
+            onClick={() =>
+              router.push("/user")
+            }>{`profile : ${name}`}</DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={handleSignOut}
             className="focus:bg-red-300 hover:bg-red-700 transition-colors">
             logout
           </DropdownMenuItem>
