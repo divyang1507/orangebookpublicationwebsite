@@ -31,7 +31,7 @@ const ProductProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     getBooks();
