@@ -6,7 +6,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FaRegUserCircle } from "react-icons/fa";
 
-const Page = () => {
+const page = () => {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const { user, profile, loading } = useAuth();
 
   if (loading) {
@@ -26,4 +27,4 @@ const Page = () => {
 
 };
 
-export default Page;
+export default page;

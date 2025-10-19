@@ -8,7 +8,7 @@ import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { HashLoader } from "react-spinners";
 
-const Page = () => {
+const page = () => {
   const { fetchBook, editBook, book, uploadImages, deleteImage } =
     useProduct();
   const { id } = useParams();
@@ -232,4 +232,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default page;

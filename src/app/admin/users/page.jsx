@@ -12,7 +12,7 @@ import {
 import React, { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
 
-const Page = () => {
+const page = () => {
   const supabase = createClient();
   const [users, setUsers] = useState([]);
   //   const [book, setBook] = useState(null);
@@ -76,4 +76,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default page;

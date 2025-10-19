@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FaRegUserCircle } from "react-icons/fa";
 
-const Page = () => {
+const page = () => {
   const { user, profile, loading } = useAuth();
 
   if (loading) {
@@ -26,4 +26,4 @@ const Page = () => {
 
 };
 
-export default Page;
+export default page;

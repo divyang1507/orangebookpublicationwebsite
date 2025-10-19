@@ -9,7 +9,8 @@ import { HashLoader } from "react-spinners";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
 
-const Page = () => {
+const page = () => {
+
   const { fetchBook, book, loading } = useProduct();
   const { addToCart, loading: cartLoading } = useCart();
   const { id } = useParams();
@@ -159,4 +160,4 @@ const [quantity, setQuantity] = useState(1); // State for quantity
   );
 };
 
-export default Page;
+export default page;
