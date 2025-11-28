@@ -7,6 +7,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { CartProvider } from "@/context/CartContext";
 import GoogleOneTap from "@/components/GoogleOneTap";
+import Footer from "@/components/Footer";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -33,6 +34,7 @@ export default function RootLayout({ children }) {
               <Navbar />
               {children}
               <GoogleOneTap />
+              <Footer />
             </CartProvider>
           </ProductProvider>
         </AuthProvider>
