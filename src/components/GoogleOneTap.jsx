@@ -64,7 +64,7 @@ const GoogleOneTap = () => {
       // UI Customization
       cancel_on_tap_outside: false, // Keep prompt open if user clicks outside
       prompt_parent_id: 'oneTap', // Optional: attach to specific div
-    //   use_fedcm_for_prompt: false
+      use_fedcm_for_prompt: false
     });
 
     // Display the prompt
