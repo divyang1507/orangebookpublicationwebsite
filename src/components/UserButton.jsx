@@ -46,6 +46,10 @@ const UserButton = ({ name }) => {
               router.push("/user")
             }>{`profile : ${name}`}</DropdownMenuItem>
           <DropdownMenuItem
+            onClick={() =>
+              router.push("/user/orders")
+            }>{'orders'}</DropdownMenuItem>
+          <DropdownMenuItem
             onClick={handleSignOut}
             className="focus:bg-red-300 hover:bg-red-700 transition-colors">
             logout

@@ -178,3 +178,23 @@ body{
   stroke-dasharray: 125.6;
   transform: rotate(-90deg);
 }
+
+@layer utilities {
+  @media print {
+    /* Hide sidebar and navbar when printing */
+    nav, aside, .sidebar {
+      display: none !important;
+    }
+    /* Ensure the main content takes full width */
+    main, div {
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+    }
+    /* Hide elements with print:hidden class */
+    .print\:hidden {
+      display: none !important;
+    }
+  }
+}

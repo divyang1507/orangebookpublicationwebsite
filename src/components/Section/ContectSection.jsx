@@ -38,7 +38,7 @@ export default function ContactSection() {
               <FaEnvelope className="text-orange-500 text-xl mt-1" />
               <div>
                 <h4 className="font-semibold text-gray-700">Email</h4>
-                <p className="text-gray-600">contact@orangebook.in</p>
+                <p className="text-gray-600">orangebookpublication2020@gmail.com</p>
               </div>
             </div>
             <div className="flex items-start space-x-4">

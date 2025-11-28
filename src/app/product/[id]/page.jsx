@@ -8,14 +8,15 @@ import { useProduct } from "@/context/ProductContext";
 import { HashLoader } from "react-spinners";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
+import { toast } from "react-toastify"; // Import toast for notifications
 
-const page = () => {
-
+const Page = () => {
   const { fetchBook, book, loading } = useProduct();
   const { addToCart, loading: cartLoading } = useCart();
   const { id } = useParams();
   const [activeImage, setActiveImage] = useState();
-const [quantity, setQuantity] = useState(1); // State for quantity
+  const [quantity, setQuantity] = useState(1);
+
   useEffect(() => {
     if (id && typeof id === "string") {
       fetchBook(id);
@@ -28,24 +29,47 @@ const [quantity, setQuantity] = useState(1); // State for quantity
     }
   }, [book]);
 
+  // --- UPDATED: Handle Quantity Change with Inventory Check ---
   const handleQuantityChange = (amount) => {
-    setQuantity(prev => Math.max(1, prev + amount)); // Ensure quantity doesn't go below 1
+    setQuantity((prev) => {
+      const newQuantity = prev + amount;
+      const maxInventory = Number(book?.inventory) || 1;
+
+      // Prevent going below 1
+      if (newQuantity < 1) return 1;
+
+      // Prevent going above inventory
+      if (newQuantity > maxInventory) {
+        toast.warn(`Only ${maxInventory} items left in stock!`);
+        return maxInventory;
+      }
+
+      return newQuantity;
+    });
   };
 
   const handleAddToCart = () => {
     if (book) {
-      addToCart(book.id, quantity);
+      // Pass the full book object for the optimized CartContext
+      addToCart(book, quantity);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <HashLoader color="#f97316" />
+      </div>
+    );
+  }
+
+  // Safe inventory check
+  const inventoryCount = Number(book?.inventory) || 0;
+  const isOutOfStock = inventoryCount === 0;
 
   return (
     <section className="w-[90%] max-w-7xl mx-auto py-12">
-      {loading ? (
-        <div className="flex justify-center items-center h-96">
-          <HashLoader color="#f97316" />
-        </div>
-      ) : (
+      {book && (
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Left - Images */}
           <div className="flex flex-col-reverse lg:flex-row gap-6 w-full lg:w-1/2">
@@ -94,6 +118,13 @@ const [quantity, setQuantity] = useState(1); // State for quantity
               </div>
               <span className="text-gray-400">|</span>
               <span>{book?.review ?? "100"}+ Reviews</span>
+              {/* Inventory Status Badge */}
+              {isOutOfStock ? (
+                <span className="text-red-600 font-bold bg-red-50 px-2 py-1 rounded">Out of Stock</span>
+              ) : (
+                <span className="text-green-600 font-bold bg-green-50 px-2 py-1 rounded">In Stock ({inventoryCount})</span>
+              )}
+              
               <div className="flex items-center gap-3 text-xl ml-auto">
                 <FaFacebook className="hover:text-blue-600 transition" />
                 <FaTwitter className="hover:text-sky-500 transition" />
@@ -113,11 +144,7 @@ const [quantity, setQuantity] = useState(1); // State for quantity
               <span className="text-2xl font-semibold text-orange-600">
                 ₹ {book?.price}
               </span>
-              {/* <Link href="/cart">
-                <button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300">
-                  Add to Cart
-                </button>
-              </Link> */}
+
               <div className="flex flex-col items-center gap-4">
                  {/* Quantity Adjuster */}
                  <div className="flex items-center border rounded">
@@ -127,7 +154,7 @@ const [quantity, setQuantity] = useState(1); // State for quantity
                         onClick={() => handleQuantityChange(-1)}
                         className="rounded-r-none"
                         aria-label="Decrease quantity"
-                        disabled={quantity <= 1} // Disable minus if quantity is 1
+                        disabled={quantity <= 1 || isOutOfStock} 
                     >
                         <FaMinus/>
                     </Button>
@@ -138,6 +165,8 @@ const [quantity, setQuantity] = useState(1); // State for quantity
                         onClick={() => handleQuantityChange(1)}
                         className="rounded-l-none"
                         aria-label="Increase quantity"
+                        // Disable if out of stock OR if quantity reached inventory limit
+                        disabled={isOutOfStock || quantity >= inventoryCount} 
                     >
                        <FaPlus/>
                      </Button>
@@ -146,10 +175,11 @@ const [quantity, setQuantity] = useState(1); // State for quantity
                  {/* Add to Cart Button */}
                  <Button
                     onClick={handleAddToCart}
-                    disabled={cartLoading} // Disable button while cart operation is in progress
+                    // Disable if loading OR out of stock
+                    disabled={cartLoading || isOutOfStock} 
                     className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300 disabled:opacity-50"
                  >
-                    {cartLoading ? 'Adding...' : 'Add to Cart'}
+                    {isOutOfStock ? 'Out of Stock' : (cartLoading ? 'Adding...' : 'Add to Cart')}
                  </Button>
               </div>
             </div>
@@ -160,4 +190,4 @@ const [quantity, setQuantity] = useState(1); // State for quantity
   );
 };
 
-export default page;
+export default Page;
