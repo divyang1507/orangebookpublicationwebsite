@@ -1,8 +1,12 @@
 'use client';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import emailjs from '@emailjs/browser';
+import { toast } from 'react-toastify';
 
 export default function ContactSection() {
+  const form = useRef();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
 
   const handleChange = (e) => {
@@ -11,9 +15,39 @@ export default function ContactSection() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: Replace with actual submission logic
-    alert('Thank you! We’ll get back to you soon.');
-    setFormData({ name: '', email: '', message: '' });
+    setLoading(true);
+
+    // ✅ Access environment variables with the NEXT_PUBLIC_ prefix
+    const SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+    const TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+    const PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+    // Optional: Log to check if they are loaded (remove in production)
+    // console.log("Service ID:", SERVICE_ID); 
+
+    if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+        toast.error("EmailJS configuration missing.");
+        setLoading(false);
+        return;
+    }
+
+    emailjs
+      .sendForm(SERVICE_ID, TEMPLATE_ID, form.current, {
+        publicKey: PUBLIC_KEY,
+      })
+      .then(
+        () => {
+          toast.success('Message sent successfully!');
+          setFormData({ name: '', email: '', message: '' });
+        },
+        (error) => {
+          console.error('FAILED...', error);
+          toast.error('Failed to send message. Please try again.');
+        }
+      )
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   return (
@@ -38,7 +72,7 @@ export default function ContactSection() {
               <FaEnvelope className="text-orange-500 text-xl mt-1" />
               <div>
                 <h4 className="font-semibold text-gray-700">Email</h4>
-                <p className="text-gray-600">orangebookpublication2020@gmail.com</p>
+                <p className="text-gray-600">contact@orangebook.in</p>
               </div>
             </div>
             <div className="flex items-start space-x-4">
@@ -51,12 +85,13 @@ export default function ContactSection() {
           </div>
 
           {/* Contact Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          {/* 1. Added ref={form} */}
+          <form ref={form} onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm text-orange-700 font-medium">Your Name</label>
               <input
                 type="text"
-                name="name"
+                name="name" // Important: Must match {{name}} variable in EmailJS template
                 value={formData.name}
                 onChange={handleChange}
                 required
@@ -67,7 +102,7 @@ export default function ContactSection() {
               <label className="block text-sm text-orange-700 font-medium">Your Email</label>
               <input
                 type="email"
-                name="email"
+                name="email" // Important: Must match {{email}} variable in EmailJS template
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -77,7 +112,7 @@ export default function ContactSection() {
             <div>
               <label className="block text-sm text-orange-700 font-medium">Message</label>
               <textarea
-                name="message"
+                name="message" // Important: Must match {{message}} variable in EmailJS template
                 value={formData.message}
                 onChange={handleChange}
                 rows="4"
@@ -87,9 +122,10 @@ export default function ContactSection() {
             </div>
             <button
               type="submit"
-              className="w-full bg-orange-600 text-white py-2 rounded-md font-medium hover:bg-orange-700 transition"
+              disabled={loading}
+              className="w-full bg-orange-600 text-white py-2 rounded-md font-medium hover:bg-orange-700 transition disabled:opacity-50"
             >
-              Submit
+              {loading ? 'Sending...' : 'Submit'}
             </button>
           </form>
         </div>
