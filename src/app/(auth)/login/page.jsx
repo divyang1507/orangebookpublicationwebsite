@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { FaGoogle } from 'react-icons/fa'; // Import Google Icon
+import { FaGoogle } from 'react-icons/fa'; // Ensure you have react-icons installed
 
 export default function LoginPage() {
 
@@ -12,15 +12,17 @@ export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+  // --- Email/Password Login Handler ---
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     let email = identifier;
 
+    // If user entered mobile instead of email, query Supabase users table (custom table)
     if (!identifier.includes('@')) {
       const { data, error } = await supabase
-        .from('users') 
+        .from('users')  // Ensure this table exists if you are using mobile login
         .select('email')
         .eq('mobile', identifier)
         .single();
@@ -29,6 +31,7 @@ export default function LoginPage() {
         setLoading(false);
         return alert('User not found');
       }
+
       email = data.email;
     }
 
@@ -36,14 +39,17 @@ export default function LoginPage() {
     setLoading(false);
 
     if (error) return alert(error.message);
-    router.push('/user'); 
+    
+    // Successful login
+    router.push('/user'); // redirect to user dashboard
   };
 
-  // --- GOOGLE LOGIN HANDLER ---
+  // --- Google Login Handler ---
   const handleGoogleLogin = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
+        // This must match the URL you added in Supabase Auth -> URL Configuration
         redirectTo: `${location.origin}/auth/callback`,
         queryParams: {
           access_type: 'offline',
@@ -58,8 +64,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
         <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">Login</h2>
+        
+        {/* Email/Password Form */}
         <form onSubmit={handleLogin} className="space-y-5">
-          {/* ... existing inputs ... */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Email or Mobile</label>
             <input
@@ -91,8 +98,8 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* --- GOOGLE LOGIN BUTTON --- */}
-        <div className="mt-4">
+        {/* Divider */}
+        <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300" />
@@ -101,6 +108,8 @@ export default function LoginPage() {
               <span className="px-2 bg-white text-gray-500">Or continue with</span>
             </div>
           </div>
+
+          {/* Google Login Button */}
           <button
             type="button"
             onClick={handleGoogleLogin}
