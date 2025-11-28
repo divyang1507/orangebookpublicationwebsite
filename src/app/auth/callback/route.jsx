@@ -4,31 +4,57 @@ import { createClient } from '@/utils/supabase/server';
 export async function GET(request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
-  
-  // This defaults to your homepage if no 'next' param is found
   const next = requestUrl.searchParams.get('next') || '/';
-  
-  // In production, this will be 'https://orangebookpublication.in'
-  // In dev, it is 'http://localhost:3000'
-  const origin = requestUrl.origin; 
+  const origin = requestUrl.origin;
 
   if (code) {
-    // 1. Initialize Supabase (AWAIT is crucial here)
     const supabase = await createClient();
     
-    // 2. Exchange the code for a session (This logs the user in)
+    // 1. Exchange the code for a session
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     
     if (!error) {
-      // --- (Optional) Profile Creation Logic Goes Here ---
-      
-      // 3. SUCCESS: Redirect to the homepage
-      // This line sends the user from /auth/callback -> orangebookpublication.in
+      // 2. Fetch the logged-in user
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        // 3. Check if a profile already exists
+        const { data: existingProfile, error: profileFetchError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .single();
+
+        // 4. If no profile exists, create one using Google data
+        if (!existingProfile) {
+          
+          // Extract name from Google metadata, fallback to email part
+          const googleName = user.user_metadata.full_name || 
+                             user.user_metadata.name || 
+                             user.email?.split('@')[0];
+
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              name: googleName,      // <--- Uses Google Display Name
+              email: user.email,
+              role: 'user',          // Default role
+              mobile: '',            // Empty initially
+              address: ''            // Empty initially
+            });
+
+          if (insertError) {
+            console.error("Error creating profile from Google login:", insertError);
+          }
+        }
+      }
+
+      // 5. Redirect to home/next page
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
 
-  // 4. FAILURE: Redirect to an error page or back to login
-  console.error('Auth Code Exchange Failed');
-  return NextResponse.redirect(`${origin}/login?error=auth_code_error`);
+  // Handle errors
+  return NextResponse.redirect(`${origin}/auth/auth-code-error`);
 }
