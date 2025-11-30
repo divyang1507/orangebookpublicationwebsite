@@ -154,20 +154,23 @@
 //   );
 // };
 
-// export default CartPage;
-
-// src/app/cart/page.jsx
 'use client';
 
-import React, { useState } from 'react'; // Import useState
+import React, { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { FaTrash, FaPlus, FaMinus } from 'react-icons/fa';
-import { toast } from 'react-toastify'; // Import toast
+import { toast } from 'react-toastify';
+import Script from 'next/script'; // Import Next.js Script
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';// Import toast
 
 const CartPage = () => {
   const { cartItems, loading, error, removeFromCart, updateCartQuantity, cartTotal, fetchCartItems } = useCart();
+  const { user, profile } = useAuth(); // Get user details
+  const [isProcessing, setIsProcessing] = useState(false);
+  const router = useRouter();
   const [mockLoading, setMockLoading] = useState(false); // State for mock button loading
 
   // Handler for the mock order button
@@ -195,6 +198,81 @@ const CartPage = () => {
       setMockLoading(false);
     }
   };
+
+const handleCheckout = async () => {
+    if (!profile?.address) {
+      toast.error("Please add a shipping address in your profile first.");
+      router.push('/user/profile');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // 1. Create Order on Server
+      const response = await fetch('/api/razorpay/create-order', { method: 'POST' });
+      const orderData = await response.json();
+
+      if (!response.ok) throw new Error(orderData.error);
+
+      // 2. Initialize Razorpay Options
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: "INR",
+        name: "Orange Book Publication",
+        description: "Book Purchase",
+        order_id: orderData.id,
+        handler: async function (response) {
+          // 3. Verify Payment on Server
+          try {
+            const verifyRes = await fetch('/api/razorpay/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (!verifyRes.ok) throw new Error(verifyData.error);
+
+            // Success!
+            toast.success("Payment Successful! Order placed.");
+            await fetchCartItems(); // Clear cart in UI
+            router.push(`/user/orders/${verifyData.orderId}`); // Redirect to order details
+
+          } catch (err) {
+            console.error("Verification Error:", err);
+            toast.error("Payment verification failed. Please contact support.");
+          }
+        },
+        prefill: {
+          name: profile?.name || "",
+          email: user?.email || "",
+          contact: profile?.mobile || "",
+        },
+        theme: {
+          color: "#f97316", // Orange color to match your theme
+        },
+      };
+
+      // 4. Open Modal
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+
+    } catch (err) {
+      console.error("Checkout Error:", err);
+      toast.error(err.message || "Failed to initiate checkout");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+
 
 
   // ... (rest of your component logic: loading, error, empty cart checks) ...
@@ -328,11 +406,12 @@ const CartPage = () => {
           Shipping & taxes calculated at checkout.
         </p>
         {/* Real Checkout Button */}
-        <Button
-          className="mt-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg text-base font-semibold transition-colors duration-200"
-          // onClick={() => router.push('/checkout')} // Your actual checkout logic
+       <Button
+          onClick={handleCheckout}
+          disabled={isProcessing}
+          className="mt-2 bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg text-base font-semibold transition-colors duration-200 disabled:opacity-50"
         >
-          Proceed to Checkout
+          {isProcessing ? 'Processing...' : 'Proceed to Pay'}
         </Button>
 
         {/* --- Mock Order Button (Only for Development) --- */}
